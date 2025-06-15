@@ -1,16 +1,12 @@
-import Layout from '@/components/Layout';
-import Hero from '@/components/Hero';
-import PromptForm from '@/components/PromptForm';
-import ImageGenerator from '@/components/ImageGenerator';
+'use client'
 
 export default function Home() {
   return (
-    <Layout>
-      <Hero />
-      <div id="generador" className="mt-16 space-y-16">
-        <PromptForm />
-        <ImageGenerator />
-      </div>
-    </Layout>
-  );
+    <div className="p-8">
+      <h1 className="text-3xl font-bold text-white">DARADIGU IA Operativo</h1>
+      <p className="mt-4 text-lg text-gray-300">
+        Bienvenido al núcleo funcional estabilizado. Ya podemos empezar a construir sobre la base real.
+      </p>
+    </div>
+  )
 }
