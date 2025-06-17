@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  console.log('=== INICIO POST /api/image (STABILITY CORE FINAL) ===');
+  console.log('=== INICIO POST /api/image (STABILITY CORE FINAL DEFINITIVO) ===');
 
   try {
     const { prompt } = await request.json();
@@ -15,13 +15,13 @@ export async function POST(request: NextRequest) {
 
     const formData = new FormData();
     formData.append("prompt", prompt);
-    formData.append("output_format", "png"); // ⚠ Cambiado aquí
+    formData.append("output_format", "png");
 
     const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "Accept": "image/png"
+        "Accept": "image/*"
       },
       body: formData
     });
