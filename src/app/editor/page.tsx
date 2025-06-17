@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import CreditCounter from '@/app/components/CreditCounter'; // ✅ añadimos el contador
+import CreditCounter from '@/components/CreditCounter';
 
 export default function EditorPage() {
   const supabase = createClientComponentClient();
@@ -48,7 +48,7 @@ export default function EditorPage() {
 
   return (
     <div className="p-4">
-      <CreditCounter /> {/* ✅ contador en la esquina superior derecha */}
+      <CreditCounter />
 
       <h1 className="text-2xl font-bold mb-4">Editor IA</h1>
 
