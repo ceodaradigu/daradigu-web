@@ -1,68 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
-import openai from '@/lib/openai';
-import supabase from '@/lib/supabaseAdmin';
+// src/app/api/image/route.ts
 
-export async function POST(req: NextRequest) {
-  try {
-    const { prompt } = await req.json();
+import { NextResponse } from "next/server";
 
-    // Prompt Enhancer IA
-    const enhanced = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'Eres un experto en ingeniería de prompts para generación de imágenes IA. Tu tarea es reescribir el prompt del usuario de forma que DALL·E 3 lo entienda claramente, especificando detalles visuales, contexto, ángulo de cámara, iluminación, estilo artístico y evitando ambigüedades. No incluyas explicaciones, solo el nuevo prompt optimizado.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      max_tokens: 300,
-    });
+export async function POST(req: Request) {
+  const { prompt } = await req.json();
 
-    const enhancedPrompt = enhanced.choices[0].message.content;
-
-    // Generación de imagen IA
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: enhancedPrompt,
-      n: 1,
-      size: '1024x1024'
-    });
-
-    const imageUrl = response.data[0].url;
-
-    // Auditoría IA posterior
-    const audit = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'Eres un experto en control de calidad IA para imágenes generadas. Evalúa si la imagen probablemente cumple con el objetivo visual. Responde: "Cumple bien", "Cumple parcialmente" o "No cumple".'
-        },
-        {
-          role: 'user',
-          content: `Prompt original: ${prompt}\nPrompt optimizado: ${enhancedPrompt}\nImagen generada: ${imageUrl}`
-        }
-      ],
-      max_tokens: 50,
-    });
-
-    const auditResult = audit.choices[0].message.content;
-
-    // Guardamos en Supabase (persistencia real SaaS)
-    await supabase.from('generations').insert([
-      {
-        type: 'image',
-        prompt,
-        result: imageUrl
-      }
-    ]);
-
-    return NextResponse.json({ imageUrl, audit: auditResult });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!prompt) {
+    return NextResponse.json({ error: "Prompt requerido" }, { status: 400 });
   }
+
+  const replicateApiKey = process.env.REPLICATE_API_KEY;
+
+  const response = await fetch("https://api.replicate.com/v1/predictions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Token ${replicateApiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      version: "db21e45e6c88c1c122a6d14b4b221baeb0e4ec6614a0364c0a2e1774e80b403b", // SDXL 1.0 model version
+      input: { prompt }
+    })
+  });
+
+  if (!response.ok) {
+    return NextResponse.json({ error: "Error al generar imagen" }, { status: 500 });
+  }
+
+  const prediction = await response.json();
+
+  return NextResponse.json({ result: prediction });
 }
