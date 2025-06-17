@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  console.log('=== INICIO POST /api/image (STABILITY CORE) ===');
+  console.log('=== INICIO POST /api/image (STABILITY CORE FINAL) ===');
 
   try {
     const { prompt } = await request.json();
@@ -15,14 +15,13 @@ export async function POST(request: NextRequest) {
 
     const formData = new FormData();
     formData.append("prompt", prompt);
-    formData.append("output_format", "url");
+    formData.append("output_format", "png"); // ⚠ Cambiado aquí
 
     const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "Accept": "application/json"
-        // OJO: NO ponemos Content-Type, fetch lo gestiona automáticamente con FormData.
+        "Accept": "image/png"
       },
       body: formData
     });
@@ -33,11 +32,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Error al generar imagen" }, { status: 500 });
     }
 
-    const data = await response.json();
-    const imageUrl = data.image;
+    const imageBuffer = await response.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const imageDataUrl = `data:image/png;base64,${base64Image}`;
 
-    console.log("Imagen generada:", imageUrl);
-    return NextResponse.json({ result: imageUrl });
+    console.log("Imagen generada correctamente.");
+    return NextResponse.json({ result: imageDataUrl });
 
   } catch (error: any) {
     console.error('Error general en Stability CORE:', error.message);
