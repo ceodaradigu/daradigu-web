@@ -13,17 +13,18 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.STABILITY_API_KEY;
 
+    const formData = new FormData();
+    formData.append("prompt", prompt);
+    formData.append("output_format", "url");
+
     const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
         "Accept": "application/json"
+        // OJO: NO ponemos Content-Type, fetch lo gestiona automáticamente con FormData.
       },
-      body: JSON.stringify({
-        prompt: prompt,
-        output_format: "url"
-      })
+      body: formData
     });
 
     if (!response.ok) {
