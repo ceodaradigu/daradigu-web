@@ -1,7 +1,7 @@
-import OpenAI from 'openai';
+// src/lib/openai.ts
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+import OpenAI from "openai";
+
+export const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY as string
 });
-
-export default openai;
