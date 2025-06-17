@@ -1,46 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { getSession } from '@/lib/auth';
+import { generateImageFromPrompt } from '@/lib/openai'; // o stability si lo usas
 
-export async function POST(request: NextRequest) {
-  console.log('=== INICIO POST /api/image (STABILITY CORE FINAL DEFINITIVO) ===');
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-  try {
-    const { prompt } = await request.json();
-    console.log('Prompt recibido:', prompt);
+export async function POST(req: NextRequest) {
+  const { prompt } = await req.json();
+  const session = await getSession();
 
-    if (!prompt) {
-      return NextResponse.json({ error: "Prompt requerido" }, { status: 400 });
-    }
-
-    const apiKey = process.env.STABILITY_API_KEY;
-
-    const formData = new FormData();
-    formData.append("prompt", prompt);
-    formData.append("output_format", "png");
-
-    const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Accept": "image/*"
-      },
-      body: formData
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error("Error Stability CORE:", error);
-      return NextResponse.json({ error: "Error al generar imagen" }, { status: 500 });
-    }
-
-    const imageBuffer = await response.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString('base64');
-    const imageDataUrl = `data:image/png;base64,${base64Image}`;
-
-    console.log("Imagen generada correctamente.");
-    return NextResponse.json({ result: imageDataUrl });
-
-  } catch (error: any) {
-    console.error('Error general en Stability CORE:', error.message);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const userId = session.user.id;
+
+  // Verificar créditos
+  const { data: creditData, error: creditError } = await supabase
+    .from('user_credits')
+    .select('credits')
+    .eq('user_id', userId)
+    .single();
+
+  if (creditError || !creditData) {
+    return NextResponse.json({ error: 'No credits found' }, { status: 500 });
+  }
+
+  const credits = creditData.credits;
+
+  if (credits <= 0) {
+    return NextResponse.json({ error: 'No credits available' }, { status: 403 });
+  }
+
+  // Generar imagen (reemplaza por tu función real si usas Stability AI)
+  const image = await generateImageFromPrompt(prompt); // función propia o importada
+
+  if (!image) {
+    return NextResponse.json({ error: 'Image generation failed' }, { status: 500 });
+  }
+
+  // Descontar 1 crédito
+  const { error: updateError } = await supabase
+    .from('user_credits')
+    .update({ credits: credits - 1 })
+    .eq('user_id', userId);
+
+  if (updateError) {
+    return NextResponse.json({ error: 'Error updating credits' }, { status: 500 });
+  }
+
+  // Insertar en generación_logs
+  const { error: logError } = await supabase
+    .from('generation_logs')
+    .insert([
+      {
+        user_id: userId,
+        type: 'image',
+        prompt,
+        result_url: image,
+      }
+    ]);
+
+  if (logError) {
+    console.error('Log insert error:', logError.message);
+    // No se detiene el proceso si el log falla
+  }
+
+  return NextResponse.json({ image });
 }
