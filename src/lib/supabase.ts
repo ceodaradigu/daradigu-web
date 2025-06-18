@@ -1,9 +1,6 @@
-'use client';
+import { createServerClient } from '@supabase/ssr'
 
-import { createBrowserClient } from '@supabase/ssr';
-import { Database } from '../types/supabase'; // o comenta esta línea si no existe
-
-export const supabase = createBrowserClient<Database>(
+export const supabaseAdmin = createServerClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
