@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSession } from '@/lib/auth';
-import { generateImageFromPrompt } from '@/lib/openai'; // o stability si lo usas
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +17,6 @@ export async function POST(req: NextRequest) {
 
   const userId = session.user.id;
 
-  // Verificar créditos
   const { data: creditData, error: creditError } = await supabase
     .from('user_credits')
     .select('credits')
@@ -35,14 +33,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No credits available' }, { status: 403 });
   }
 
-  // Generar imagen (reemplaza por tu función real si usas Stability AI)
-  const image = await generateImageFromPrompt(prompt); // función propia o importada
+  // 🔁 Generar imagen con Stability AI
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/core', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt,
+      model: 'stable-diffusion-xl-v1',
+      aspect_ratio: '1:1',
+      output_format: 'url'
+    })
+  });
 
-  if (!image) {
+  const result = await response.json();
+
+  if (!response.ok || !result.image) {
     return NextResponse.json({ error: 'Image generation failed' }, { status: 500 });
   }
 
-  // Descontar 1 crédito
+  const image = result.image;
+
+  // 🔁 Descontar crédito
   const { error: updateError } = await supabase
     .from('user_credits')
     .update({ credits: credits - 1 })
@@ -52,7 +66,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error updating credits' }, { status: 500 });
   }
 
-  // Insertar en generación_logs
+  // 🔁 Log de generación
   const { error: logError } = await supabase
     .from('generation_logs')
     .insert([
@@ -66,7 +80,6 @@ export async function POST(req: NextRequest) {
 
   if (logError) {
     console.error('Log insert error:', logError.message);
-    // No se detiene el proceso si el log falla
   }
 
   return NextResponse.json({ image });
