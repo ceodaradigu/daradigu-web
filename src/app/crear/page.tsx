@@ -1,54 +1,52 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase';
-import CreditCounter from '@/components/CreditCounter';
+import { supabase } from '@/lib/supabase';
 
-export default function Crear() {
-  const supabase = createClient();
+export default function CrearPage() {
   const [prompt, setPrompt] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const generateImage = async () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
+
     setLoading(true);
-    const res = await fetch('/api/image', {
+    const res = await fetch('/api/crear', {
       method: 'POST',
       body: JSON.stringify({ prompt }),
     });
+
     const data = await res.json();
-    setImageUrl(data.imageUrl || '');
+    setResponse(data.result || 'No hubo respuesta.');
     setLoading(false);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-white p-6">
-      <h1 className="text-3xl font-bold mb-4 text-pink-400">Generador de Imágenes IA</h1>
+    <main className="min-h-screen p-8 text-center bg-gradient-to-b from-black to-indigo-950 text-white">
+      <h1 className="text-3xl font-bold mb-6 text-fuchsia-400">Generador de Contenido IA</h1>
 
-      <CreditCounter />
+      <div className="max-w-xl mx-auto bg-zinc-900 p-6 rounded-xl shadow-lg border border-fuchsia-800">
+        <input
+          className="w-full p-3 text-black rounded-md mb-4"
+          placeholder="Escribe tu prompt aquí..."
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+        />
+        <button
+          onClick={handleGenerate}
+          className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white font-bold py-2 px-6 rounded hover:opacity-90 transition"
+        >
+          {loading ? 'Generando...' : '✨ Generar IA'}
+        </button>
 
-      <input
-        type="text"
-        className="w-full max-w-xl p-4 rounded-md text-black mb-4"
-        placeholder="Escribe un prompt para generar una imagen..."
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-      />
-
-      <button
-        onClick={generateImage}
-        className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-3 rounded-lg font-bold"
-        disabled={loading}
-      >
-        {loading ? 'Generando...' : '🎨 Generar Imagen'}
-      </button>
-
-      {imageUrl && (
-        <div className="mt-8">
-          <img src={imageUrl} alt="Resultado generado" className="max-w-xl rounded-lg shadow-xl" />
-        </div>
-      )}
-    </div>
+        {response && (
+          <div className="mt-6 text-left bg-zinc-800 p-4 rounded-lg border border-zinc-700">
+            <p className="text-fuchsia-300 font-semibold mb-2">Respuesta IA:</p>
+            <p>{response}</p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
