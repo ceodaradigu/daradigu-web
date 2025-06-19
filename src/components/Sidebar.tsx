@@ -8,8 +8,8 @@ import clsx from 'clsx'
 const menuItems = [
   { name: 'Inicio', icon: <Home size={20} />, href: '/' },
   { name: 'Diseñar', icon: <Sparkles size={20} />, href: '/crear' },
-  { name: 'Imágenes IA', icon: <Image size={20} />, href: '/imagen' },
-  { name: 'Voz IA', icon: <Mic size={20} />, href: '/voz' },
+  { name: 'Imágenes IA', icon: <Image size={20} />, href: '/imagen-ia' },
+  { name: 'Voz IA', icon: <Mic size={20} />, href: '/voz-ia' },
   { name: 'Automatizar', icon: <Rocket size={20} />, href: '/automatizar' },
   { name: 'Mis Proyectos', icon: <Settings size={20} />, href: '/proyectos' },
 ]
