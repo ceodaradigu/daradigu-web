@@ -1,43 +1,54 @@
-'use client'
+'use client';
 
-import React from 'react'
-import Link from 'next/link'
-import { FiHome, FiEdit, FiZap, FiFolder, FiLayout } from 'react-icons/fi'
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
+
+const navItems = [
+  { label: "Diseñar", href: "/disenar" },
+  { label: "Imagen IA", href: "/imagen-ia" },
+  { label: "Voz IA", href: "/voz-ia" },
+  { label: "Automatizar", href: "/automatizar" },
+  { label: "Mis Proyectos", href: "/proyectos" },
+];
 
 export default function Navbar() {
-  return (
-    <aside className="w-60 min-h-screen bg-gradient-to-br from-[#0A0A0F] via-[#14142A] to-[#1A1A3F] text-white p-6 flex flex-col justify-between shadow-xl">
-      <div>
-        <div className="flex justify-center mb-12">
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-[#00FFFf] via-[#FF80FF] to-[#FF0070] bg-clip-text text-transparent tracking-wide">
-            DARADIGU IA
-          </h2>
-        </div>
+  const pathname = usePathname();
 
-        <nav className="flex flex-col gap-4">
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#14142A] hover:bg-[#00FFFF] hover:text-black transition">
-            <FiHome /> Inicio
-          </Link>
-          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#14142A] hover:bg-[#00FFFF] hover:text-black transition">
-            <FiLayout /> Dashboard
-          </Link>
-          <Link href="/crear" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#14142A] hover:bg-[#00FFFF] hover:text-black transition">
-            <FiEdit /> Crear
-          </Link>
-          <Link href="/automatizar" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#14142A] hover:bg-[#00FFFF] hover:text-black transition">
-            <FiZap /> Automatizar
-          </Link>
-          <Link href="/proyectos" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#14142A] hover:bg-[#00FFFF] hover:text-black transition">
-            <FiFolder /> Proyectos
-          </Link>
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#0f0c29]/50 backdrop-blur-md border-b border-white/10">
+      <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+        {/* Logo o nombre */}
+        <Link href="/">
+          <span className="text-white font-extrabold text-2xl tracking-wide hover:opacity-90 transition">
+            Daradigu IA
+          </span>
+        </Link>
+
+        {/* Navegación */}
+        <nav className="flex space-x-6">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative text-white text-sm font-medium hover:text-orange-400 transition ${
+                  isActive ? "text-orange-500" : ""
+                }`}
+              >
+                {item.label}
+                {isActive && (
+                  <motion.span
+                    layoutId="underline"
+                    className="absolute -bottom-1 left-0 h-0.5 w-full bg-orange-500"
+                  />
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </div>
-
-      <div className="flex justify-center">
-        <div className="h-14 w-14 bg-gradient-to-r from-[#00FFFf] to-[#FF00FF] rounded-full flex items-center justify-center shadow-xl cursor-pointer">
-          <span className="text-xl font-bold">D</span>
-        </div>
-      </div>
-    </aside>
-  )
+    </header>
+  );
 }
